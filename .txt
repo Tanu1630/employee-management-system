@@ -1,0 +1,35 @@
+{
+    "name": "Harsh",
+    "age": 22,
+    "state": "Maharashtra",
+    "type": "private",
+    "salary": 500000
+}
+
+{
+  "employee": {
+    "id": 1
+  },
+  "projectName": "AI System",
+  "teamName": "ML Team",
+  "position": "Data Scientist",
+  "durationInMonths": 6
+}
+
+endpoints:
+
+http://localhost:8080/emp/home
+http://localhost:8080/emp/all
+http://localhost:8080/emp/addEmp
+http://localhost:8080/emp/removeEmp/id
+http://localhost:8080/emp/findEmp/id
+http://localhost:8080/emp/update/id
+http://localhost:8080/emp/updatePartial/id
+
+
+http://localhost:8080/assignment/all
+http://localhost:8080/assignment/add
+http://localhost:8080/assignment/find/id
+http://localhost:8080/assignment/remove/id
+http://localhost:8080/assignment/update/id
+http://localhost:8080/assignment//partialupdate/id

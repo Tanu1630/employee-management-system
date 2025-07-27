@@ -16,4 +16,6 @@ public interface AssignmentService {
     public List<Assignment> getAllAssignments();
 
     public String updateAssignment(int id, Assignment updatedAssignment);
+
+    public  String partialUpdateAssignment(int id, Assignment updatedAssignment);
 }

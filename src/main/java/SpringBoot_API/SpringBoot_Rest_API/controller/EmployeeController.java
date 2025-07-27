@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 @RestController
 @RequestMapping("/emp")
@@ -41,18 +42,22 @@ public class EmployeeController {
 
    @DeleteMapping("/removeEmp/{id}")
    public ResponseEntity<String> removemployee(@PathVariable int id) {
-
-      empservice.removeEmployee(id);
-
-      return new ResponseEntity<String>("Remove Successfully", HttpStatus.ACCEPTED);
+      String result = empservice.removeEmployee(id);
+      if (result.startsWith("Delete")) {
+         return new ResponseEntity<>(result, HttpStatus.ACCEPTED);
+      } else {
+         return new ResponseEntity<>(result, HttpStatus.NOT_FOUND);
+      }
    }
 
    @GetMapping("/findEmp/{id}")
-   public ResponseEntity<Optional<Employee>> findEmployeeById(@PathVariable int id) {
-
+   public ResponseEntity<?> findEmployeeById(@PathVariable int id) {
       Optional<Employee> emps = empservice.findEmployeeById(id);
-
-      return new ResponseEntity<Optional<Employee>>(emps, HttpStatus.ACCEPTED);
+      if (emps.isPresent()) {
+         return new ResponseEntity<>(emps, HttpStatus.OK);
+      } else {
+         return new ResponseEntity<>("Employee with ID " + id + " not found", HttpStatus.NOT_FOUND);
+      }
    }
 
    @GetMapping("/all")
@@ -64,12 +69,23 @@ public class EmployeeController {
    }
 
    @PutMapping("/update/{id}")
-    public ResponseEntity<String> updateEmployee(@PathVariable int id, @RequestBody Employee employee) {
-        String result = empservice.updateEmployee(id, employee);
-        if (result.equals("Update Successfully")) {
-            return ResponseEntity.ok(result);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
-        }
-    }
+   public ResponseEntity<String> updateEmployee(@PathVariable int id, @RequestBody Employee employee) {
+      String result = empservice.updateEmployee(id, employee);
+      if (result.equals("Update Successfully")) {
+         return ResponseEntity.ok(result);
+      } else {
+         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+      }
+   }
+
+   @PatchMapping("/updatePartial/{id}")
+   public ResponseEntity<String> partialUpdateEmployee(@PathVariable int id, @RequestBody Employee employee) {
+      String result = empservice.partialUpdateEmployee(id, employee);
+      if (result.equals("Partial update successful")) {
+         return ResponseEntity.ok(result);
+      } else {
+         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+      }
+   }
+
 }

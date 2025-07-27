@@ -16,5 +16,8 @@ public interface EmployeeService {
     public List<Employee> getAllEmployee();
     
     public String updateEmployee(int id , Employee updatedEmp);
+
+    public String partialUpdateEmployee(int id, Employee updatedEmp);
+
     
 }
