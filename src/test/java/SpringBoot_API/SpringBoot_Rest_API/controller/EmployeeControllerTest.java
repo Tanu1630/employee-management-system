@@ -1,119 +1,176 @@
 package SpringBoot_API.SpringBoot_Rest_API.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.Arrays;
-import java.util.Optional;
+import SpringBoot_API.SpringBoot_Rest_API.model.Assignment;
+import SpringBoot_API.SpringBoot_Rest_API.model.Employee;
+import SpringBoot_API.SpringBoot_Rest_API.serviceIMPL.AssignmentServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+// import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import SpringBoot_API.SpringBoot_Rest_API.model.Employee;
-import SpringBoot_API.SpringBoot_Rest_API.serviceIMPL.EmployeeServiceImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.Optional;
 
-@WebMvcTest(EmployeeController.class)
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(AssignmentController.class)
 public class EmployeeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private EmployeeServiceImpl employeeService;
+    private AssignmentServiceImpl assignmentService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    void testHomePage() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/emp/home"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Welcome to Employee Management"));
+    private Assignment getSampleAssignment() {
+        Employee employee = new Employee(1, "John Doe", 25, "NY", "Full-time", 50000);
+        Assignment assignment = new Assignment();
+        assignment.setAssignmentId(1);
+        assignment.setEmployee(employee);
+        assignment.setProjectName("ProjectX");
+        assignment.setTeamName("Alpha");
+        assignment.setPosition("Developer");
+        assignment.setDurationInMonths(12);
+        return assignment;
     }
 
     @Test
-    void testAddEmployee() throws Exception {
-        Employee emp = new Employee(1, "John", 25, "Texas", "Developer", 50000);
+    public void testAddAssignment_Success() throws Exception {
+        Assignment assignment = getSampleAssignment();
+        when(assignmentService.addAssignment(any(Assignment.class))).thenReturn(assignment);
 
-        when(employeeService.AddEmployee(any(Employee.class))).thenReturn(emp);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/emp/addEmp")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(emp)))
+        mockMvc.perform(post("/assignment/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(assignment)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("John"));
+                .andExpect(jsonPath("$.assignmentId").value(1))
+                .andExpect(jsonPath("$.projectName").value("ProjectX"));
     }
 
     @Test
-    void testRemoveEmployee() throws Exception {
-        when(employeeService.removeEmployee(1)).thenReturn("Remove Successfully");
+    public void testAddAssignment_EmployeeNotFound() throws Exception {
+        Assignment assignment = getSampleAssignment();
+        when(assignmentService.addAssignment(any(Assignment.class)))
+                .thenThrow(new RuntimeException("Employee with ID 1 does not exist"));
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/emp/removeEmp/1"))
-                .andExpect(status().isAccepted())
-                .andExpect(content().string("Remove Successfully"));
-
-        verify(employeeService, times(1)).removeEmployee(1);
-    }
-
-   @Test
-void testFindEmployeeById() throws Exception {
-    Employee emp = new Employee(1, "John", 25, "Texas", "Developer", 50000);
-    when(employeeService.findEmployeeById(1)).thenReturn(Optional.of(emp));
-
-    mockMvc.perform(MockMvcRequestBuilders.get("/emp/findEmp/1"))
-            .andExpect(status().isAccepted())
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.name").value("John"))
-            .andExpect(jsonPath("$.state").value("Texas"))
-            .andExpect(jsonPath("$.type").value("Developer"))
-            .andExpect(jsonPath("$.salary").value(50000));
-}
-
-    @Test
-    void testListOfEmployees() throws Exception {
-        Employee emp1 = new Employee(1, "John", 25, "Texas", "Developer", 50000);
-        Employee emp2 = new Employee(2, "Alice", 30, "California", "Manager", 70000);
-
-        when(employeeService.getAllEmployee()).thenReturn(Arrays.asList(emp1, emp2));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/emp/all"))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].name").value("John"))
-                .andExpect(jsonPath("$[1].name").value("Alice"));
+        mockMvc.perform(post("/assignment/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(assignment)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Employee with ID 1 does not exist"));
     }
 
     @Test
-    void testUpdateEmployee_Success() throws Exception {
-        Employee updatedEmp = new Employee(1, "John Updated", 26, "Florida", "Lead", 60000);
+    public void testFindAssignment_Success() throws Exception {
+        Assignment assignment = getSampleAssignment();
+        when(assignmentService.findAssignmentById(1)).thenReturn(Optional.of(assignment));
 
-        when(employeeService.updateEmployee(eq(1), any(Employee.class))).thenReturn("Update Successfully");
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/emp/update/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedEmp)))
+        mockMvc.perform(get("/assignment/find/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Update Successfully"));
+                .andExpect(jsonPath("$.assignmentId").value(1))
+                .andExpect(jsonPath("$.projectName").value("ProjectX"));
     }
 
     @Test
-    void testUpdateEmployee_NotFound() throws Exception {
-        Employee updatedEmp = new Employee(1, "John Updated", 26, "Florida", "Lead", 60000);
+    public void testFindAssignment_NotFound() throws Exception {
+        when(assignmentService.findAssignmentById(1)).thenReturn(Optional.empty());
 
-        when(employeeService.updateEmployee(eq(99), any(Employee.class))).thenReturn("Employee not found");
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/emp/update/99")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedEmp)))
+        mockMvc.perform(get("/assignment/find/1"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Employee not found"));
+                .andExpect(content().string("Assignment not found"));
+    }
+
+    @Test
+    public void testGetAllAssignments() throws Exception {
+        Assignment assignment1 = getSampleAssignment();
+        Assignment assignment2 = getSampleAssignment();
+        assignment2.setAssignmentId(2);
+        assignment2.setProjectName("ProjectY");
+
+        when(assignmentService.getAllAssignments()).thenReturn(Arrays.asList(assignment1, assignment2));
+
+        mockMvc.perform(get("/assignment/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(2))
+                .andExpect(jsonPath("$[0].assignmentId").value(1))
+                .andExpect(jsonPath("$[1].assignmentId").value(2));
+    }
+
+    @Test
+    public void testRemoveAssignment_Success() throws Exception {
+        when(assignmentService.removeAssignment(1)).thenReturn("Assignment removed successfully");
+
+        mockMvc.perform(delete("/assignment/remove/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Assignment removed successfully"));
+    }
+
+    @Test
+    public void testRemoveAssignment_NotFound() throws Exception {
+        when(assignmentService.removeAssignment(1)).thenReturn("Assignment not found");
+
+        mockMvc.perform(delete("/assignment/remove/1"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Assignment not found"));
+    }
+
+    @Test
+    public void testUpdateAssignment_Success() throws Exception {
+        when(assignmentService.updateAssignment(eq(1), any(Assignment.class)))
+                .thenReturn("Assignment updated successfully");
+
+        mockMvc.perform(put("/assignment/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(getSampleAssignment())))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Assignment updated successfully"));
+    }
+
+    @Test
+    public void testUpdateAssignment_NotFound() throws Exception {
+        when(assignmentService.updateAssignment(eq(1), any(Assignment.class)))
+                .thenReturn("Assignment not found");
+
+        mockMvc.perform(put("/assignment/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(getSampleAssignment())))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Assignment not found"));
+    }
+
+    @Test
+    public void testPartialUpdateAssignment_Success() throws Exception {
+        when(assignmentService.partialUpdateAssignment(eq(1), any(Assignment.class)))
+                .thenReturn("Partial update successful");
+
+        mockMvc.perform(patch("/assignment/partialupdate/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(getSampleAssignment())))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Partial update successful"));
+    }
+
+    @Test
+    public void testPartialUpdateAssignment_NotFound() throws Exception {
+        when(assignmentService.partialUpdateAssignment(eq(1), any(Assignment.class)))
+                .thenReturn("Assignment not found");
+
+        mockMvc.perform(patch("/assignment/partialupdate/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(getSampleAssignment())))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Assignment not found"));
     }
 }
