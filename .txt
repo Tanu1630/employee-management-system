@@ -16,6 +16,8 @@
   "durationInMonths": 6
 }
 
+https://web-production-7619f.up.railway.app/emp/addEmp
+
 endpoints:
 
 http://localhost:8080/emp/home
@@ -32,7 +34,7 @@ http://localhost:8080/assignment/add
 http://localhost:8080/assignment/find/id
 http://localhost:8080/assignment/remove/id
 http://localhost:8080/assignment/update/id
-http://localhost:8080/assignment//partialupdate/id
+http://localhost:8080/assignment/partialupdate/id
 
 
 http://localhost:8080/h2-console
